@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import javax.crypto.Cipher;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.security.*;
 import java.security.spec.*;
@@ -34,8 +35,13 @@ public class CryptoService {
         PublicKey publicKey = loadPublicKey();
         Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
         cipher.init(Cipher.ENCRYPT_MODE, publicKey);
-        byte[] encryptedBytes = cipher.doFinal(hashedSecret.getBytes());
-        return Base64.getEncoder().encodeToString(encryptedBytes);
+        System.out.println("Hashed Secret length: [" + hashedSecret.getBytes().length + "]");
+        System.out.println("Hashed Secret: [" + hashedSecret + "]");
+        byte[] encryptedBytes = cipher.doFinal(hashedSecret.getBytes(StandardCharsets.UTF_8));
+        System.out.println("Encrypted Data length: [" + encryptedBytes.length + "]");
+        System.out.println("Encrypted Data bytes: [" + encryptedBytes + "]");
+        System.out.println("Encrypted Data: [" + Base64.getUrlEncoder().encodeToString(encryptedBytes) + "]");
+        return Base64.getUrlEncoder().encodeToString(encryptedBytes);
     }
 
     // Step 3: Decrypt the encrypted hashed key using RSA private key
@@ -55,12 +61,16 @@ public class CryptoService {
         if (encryptedData.length() % 4 != 0) {
             throw new IllegalArgumentException("Base64 encoded string has invalid length.");
         }
+        System.out.println("Encrypted Data: [" + encryptedData + "]");
+        System.out.println("Length: " + encryptedData.length());
         try {
             PrivateKey privateKey = loadPrivateKey();
             Cipher cipher = Cipher.getInstance(RSA_ALGORITHM);
             cipher.init(Cipher.DECRYPT_MODE, privateKey);
-            byte[] decryptedBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedData));
-            return new String(decryptedBytes);
+            System.out.println("Encrypted Data: [" + encryptedData.trim() + "]");
+            byte[] decryptedBytes = cipher.doFinal(Base64.getUrlDecoder().decode(encryptedData.trim()));
+            System.out.println("Decrypted Data: [" + new String(decryptedBytes) + "]");
+            return new String(decryptedBytes, StandardCharsets.UTF_8);
         } catch (IllegalArgumentException e) {
             throw new IllegalArgumentException("Failed to decode Base64 encoded string: " + e.getMessage(), e);
         }

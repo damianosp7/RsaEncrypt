@@ -20,7 +20,6 @@ public class CryptoController {
         return cryptoService.hashSecret(secret);
     }
 
-
     // Encrypt the hashed secret using RSA
     @PostMapping("/encrypt")
     public String encrypt(@RequestParam String hashedSecret) throws Exception {
